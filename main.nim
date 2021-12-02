@@ -1,23 +1,13 @@
-from std/strutils import Digits, parseInt, splitLines
+from std/strutils import Digits, parseInt, splitLines, dedent
 import std/strformat
 import std/sequtils
 
 proc day01a_test() =
-    let input = """199
-200
-208
-210
-200
-207
-240
-269
-260
-263"""
+    let input = [199, 200, 208, 210, 200, 207, 240, 269, 260, 263]
     const expect = 7
     var count = 0
     var prev = -1
-    for line in splitLines(input):
-        let num = parseInt(line)
+    for num in input:
         if num > prev and prev != -1:
             count += 1
         prev = num
@@ -37,9 +27,6 @@ proc day01a() =
 
     echo &"total 1a: {count}"
 
-day01a_test()
-day01a()
-
 proc day01b_core(lines: seq[string]): int =
     var win = newSeq[int]()
     result = 0
@@ -52,18 +39,9 @@ proc day01b_core(lines: seq[string]): int =
             win = win[1..3]
 
 proc day01b_test() =
-    let input = """199
-200
-208
-210
-200
-207
-240
-269
-260
-263"""
+    let input = @["199", "200", "208", "210", "200", "207", "240", "269", "260", "263"]
     const expect = 5
-    let count = day01b_core(splitLines(input))
+    let count = day01b_core(input)
     assert count == expect
 
 proc day01b() =
@@ -72,6 +50,14 @@ proc day01b() =
     echo &"total 1b: {count}"
 
 
-day01b_test()
-day01b()
+proc main() =
+    let inp = "1b"
+    case inp:
+    of "1a":
+        day01a_test()
+        day01a()
+    of "1b":
+        day01b_test()
+        day01b()
 
+main()
