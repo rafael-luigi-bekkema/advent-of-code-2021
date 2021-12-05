@@ -37,7 +37,7 @@ func Day1a() error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("day 1a: %d", count)
+	fmt.Printf("day 1a: %d\n", count)
 	return nil
 }
 
