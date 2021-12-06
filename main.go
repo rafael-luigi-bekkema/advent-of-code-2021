@@ -6,6 +6,7 @@ import (
 )
 
 func main() {
+	fmt.Print("advent of code 2021\n\n")
 	funcErrs := []func() error{
 		Day1a,
 		Day1b,
@@ -26,4 +27,6 @@ func main() {
 
 	Day4a()
 	Day4b()
+
+	fmt.Print("\n\n")
 }

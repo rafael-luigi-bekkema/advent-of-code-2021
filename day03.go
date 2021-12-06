@@ -65,15 +65,6 @@ func Day3a() error {
 	return nil
 }
 
-func scanLines(input io.Reader) []string {
-	var lines []string
-	s := bufio.NewScanner(input)
-	for s.Scan() {
-		lines = append(lines, s.Text())
-	}
-	return lines
-}
-
 func day3commons(input []string, idx int) int {
 	var common int
 	for _, line := range input {

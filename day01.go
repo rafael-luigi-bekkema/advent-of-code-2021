@@ -41,14 +41,6 @@ func Day1a() error {
 	return nil
 }
 
-func sum(ints []int) int {
-	var total int
-	for _, i := range ints {
-		total += i
-	}
-	return total
-}
-
 func day1b(input io.Reader) (int, error) {
 	s := bufio.NewScanner(input)
 	var count int
