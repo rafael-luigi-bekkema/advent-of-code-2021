@@ -1,4 +1,4 @@
-![example workflow](https://github.com/github/docs/actions/workflows/main.yml/badge.svg)
+[![Go](https://github.com/rafael-luigi-bekkema/advent-of-code-2021/actions/workflows/go.yml/badge.svg)](https://github.com/rafael-luigi-bekkema/advent-of-code-2021/actions/workflows/go.yml)
 
 # Advent of Code 2021
 
