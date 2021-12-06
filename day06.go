@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func day6a(fish []int, days int) int {
+func day6(fish []int, days int) int {
 	var timers [9]int
 
 	for _, timer := range fish {
@@ -22,7 +22,7 @@ func day6a(fish []int, days int) int {
 	return sum(timers[:])
 }
 
-func Day6a() {
+func day6wFile(days int) int {
 	data, err := os.ReadFile("input/day06.txt")
 	if err != nil {
 		panic(err)
@@ -31,7 +31,16 @@ func Day6a() {
 	for _, snum := range strings.Split(strings.TrimRight(string(data), "\n"), ",") {
 		fish = append(fish, atoi(snum))
 	}
-	days := 80
-	result := day6a(fish, days)
+	result := day6(fish, days)
+	return result
+}
+
+func Day6a() {
+	result := day6wFile(80)
 	fmt.Printf("day 6a: %d\n", result)
+}
+
+func Day6b() {
+	result := day6wFile(256)
+	fmt.Printf("day 6b: %d\n", result)
 }

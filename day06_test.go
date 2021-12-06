@@ -18,7 +18,7 @@ func TestDay6a(t *testing.T) {
 
 	for i, tc := range cases {
 		t.Run(fmt.Sprintf("Case %d", i+1), func(t *testing.T) {
-			result := day6a(input, tc.days)
+			result := day6(input, tc.days)
 			if result != tc.expect {
 				t.Fatalf("case %d: expected %d, got %d", i+1, tc.expect, result)
 			}
@@ -30,4 +30,10 @@ func ExampleDay6a() {
 	Day6a()
 
 	// Output: day 6a: 395627
+}
+
+func ExampleDay6b() {
+	Day6b()
+
+	// Output: day 6b: 1767323539209
 }
