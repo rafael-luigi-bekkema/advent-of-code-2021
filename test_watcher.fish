@@ -1,0 +1,3 @@
+#!/usr/bin/env fish
+
+exec watchexec -- go test -timeout 5s ./...

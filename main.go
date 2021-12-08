@@ -1,11 +1,21 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
+	"os/exec"
 )
 
 func main() {
+	testWatcherP := flag.Bool("watch", false, "Run test watcher")
+	flag.Parse()
+
+	if *testWatcherP {
+		testWatcher()
+		return
+	}
+
 	fmt.Print("advent of code 2021\n\n")
 	funcErrs := []func() error{
 		Day1a,
@@ -35,4 +45,12 @@ func main() {
 	Day7b()
 
 	fmt.Print("\n\n")
+}
+
+func testWatcher() {
+	cmd := exec.Command("watchexec", "--", "go", "test", "-timeout", "5s", "./...")
+	cmd.Stdout = os.Stdout
+	if err := cmd.Run(); err != nil {
+		fmt.Println(err)
+	}
 }
