@@ -50,6 +50,7 @@ func main() {
 func testWatcher() {
 	cmd := exec.Command("watchexec", "--", "go", "test", "-timeout", "5s", "./...")
 	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
 		fmt.Println(err)
 	}

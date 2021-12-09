@@ -132,12 +132,6 @@ func day8b(input io.Reader) int {
 					segs = clean(segs, i)
 				}
 			}
-
-			// fmt.Println(digit)
-			// for _, seg := range segs {
-			// 	fmt.Printf("<%s> ", string(seg))
-			// }
-			// fmt.Println()
 		}
 		digMap := make(map[byte]int)
 		for i, d := range segs {
