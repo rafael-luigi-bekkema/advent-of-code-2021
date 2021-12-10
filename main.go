@@ -3,8 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
+
+	"github.com/fsnotify/fsnotify"
 )
 
 func main() {
@@ -47,11 +50,46 @@ func main() {
 	fmt.Print("\n\n")
 }
 
-func testWatcher() {
-	cmd := exec.Command("watchexec", "--", "go", "test", "-timeout", "5s", "./...")
+func runTests(name string) {
+	cmd := exec.Command("go", "test", "-timeout", "5s", "./...")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		fmt.Println(err)
+		fmt.Fprintln(os.Stderr, err)
 	}
+}
+
+func testWatcher() {
+	runTests("")
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer watcher.Close()
+
+	done := make(chan bool)
+	go func() {
+		for {
+			select {
+			case event, ok := <-watcher.Events:
+				if !ok {
+					return
+				}
+				if event.Op&fsnotify.Write == fsnotify.Write {
+					runTests(event.Name)
+				}
+			case err, ok := <-watcher.Errors:
+				if !ok {
+					return
+				}
+				log.Println("watch error:", err)
+			}
+		}
+	}()
+
+	err = watcher.Add("")
+	if err != nil {
+		log.Fatal(err)
+	}
+	<-done
 }
