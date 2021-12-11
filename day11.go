@@ -18,8 +18,7 @@ func day11a(input []byte, steps int) int {
 	height := len(grid) / width
 
 	var total int
-	var flash func(i int)
-	flash = func(i int) {
+	flash := func(i int) {
 		total++
 		row := i / width
 		col := i % width
@@ -80,10 +79,7 @@ func day11b(input []byte) int {
 	}
 	height := len(grid) / width
 
-	var total int
-	var flash func(i int)
-	flash = func(i int) {
-		total++
+	flash := func(i int) {
 		row := i / width
 		col := i % width
 		for j := 0; j < 9; j++ {
