@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 
@@ -61,35 +60,8 @@ func runTests(name string) {
 
 func testWatcher() {
 	runTests("")
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer watcher.Close()
 
-	done := make(chan bool)
-	go func() {
-		for {
-			select {
-			case event, ok := <-watcher.Events:
-				if !ok {
-					return
-				}
-				if event.Op&fsnotify.Write == fsnotify.Write {
-					runTests(event.Name)
-				}
-			case err, ok := <-watcher.Errors:
-				if !ok {
-					return
-				}
-				log.Println("watch error:", err)
-			}
-		}
-	}()
-
-	err = watcher.Add("")
-	if err != nil {
-		log.Fatal(err)
-	}
-	<-done
+	watchFiles(func(fileName string) {
+		runTests(fileName)
+	}, fsnotify.Write|fsnotify.Rename|fsnotify.Remove, "")
 }
