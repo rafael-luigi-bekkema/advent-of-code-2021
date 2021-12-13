@@ -8,13 +8,13 @@ import (
 	"strconv"
 )
 
-func day1a(input io.Reader) (int, error) {
+func day1a(input io.Reader) int {
 	s := bufio.NewScanner(input)
 	var prev, count int
 	for s.Scan() {
 		num, err := strconv.Atoi(s.Text())
 		if err != nil {
-			return 0, err
+			panic(err)
 		}
 		if prev != 0 && num > prev {
 			count++
@@ -22,33 +22,29 @@ func day1a(input io.Reader) (int, error) {
 		prev = num
 	}
 	if err := s.Err(); err != nil {
-		return 0, err
+		panic(err)
 	}
-	return count, nil
+	return count
 }
 
-func Day1a() error {
+func Day1a() {
 	f, err := os.Open("input/day01.txt")
 	if err != nil {
-		return err
+		panic(err)
 	}
 	defer f.Close()
-	count, err := day1a(f)
-	if err != nil {
-		return err
-	}
+	count := day1a(f)
 	fmt.Printf("day 1a: %d\n", count)
-	return nil
 }
 
-func day1b(input io.Reader) (int, error) {
+func day1b(input io.Reader) int {
 	s := bufio.NewScanner(input)
 	var count int
 	var win []int
 	for s.Scan() {
 		num, err := strconv.Atoi(s.Text())
 		if err != nil {
-			return 0, err
+			panic(err)
 		}
 		win = append(win, num)
 		if len(win) < 4 {
@@ -60,21 +56,17 @@ func day1b(input io.Reader) (int, error) {
 		win = win[1:4]
 	}
 	if err := s.Err(); err != nil {
-		return 0, err
+		panic(err)
 	}
-	return count, nil
+	return count
 }
 
-func Day1b() error {
+func Day1b() {
 	f, err := os.Open("input/day01.txt")
 	if err != nil {
-		return err
+		panic(err)
 	}
 	defer f.Close()
-	count, err := day1b(f)
-	if err != nil {
-		return err
-	}
+	count := day1b(f)
 	fmt.Printf("day 1b: %d\n", count)
-	return nil
 }

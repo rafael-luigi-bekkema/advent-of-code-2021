@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-func day3a(input io.Reader) (int, error) {
+func day3a(input io.Reader) int {
 	s := bufio.NewScanner(input)
 
 	var commons []int
@@ -24,7 +24,7 @@ func day3a(input io.Reader) (int, error) {
 			case '0':
 				commons[i]--
 			default:
-				return 0, fmt.Errorf("unexpected char: %v", c)
+				panic(fmt.Sprintf("unexpected char: %v", c))
 			}
 		}
 	}
@@ -41,28 +41,24 @@ func day3a(input io.Reader) (int, error) {
 	}
 	gamma, err := strconv.ParseUint(string(bgamma), 2, 64)
 	if err != nil {
-		return 0, err
+		panic(err)
 	}
 	epsilon, err := strconv.ParseUint(string(bepsilon), 2, 64)
 	if err != nil {
-		return 0, err
+		panic(err)
 	}
 
-	return int(gamma * epsilon), nil
+	return int(gamma * epsilon)
 }
 
-func Day3a() error {
+func Day3a() {
 	f, err := os.Open("input/day03.txt")
 	if err != nil {
-		return err
+		panic(err)
 	}
 	defer f.Close()
-	result, err := day3a(f)
-	if err != nil {
-		return err
-	}
+	result := day3a(f)
 	fmt.Printf("day 3a: %d\n", result)
-	return nil
 }
 
 func day3commons(input []string, idx int) int {
@@ -80,7 +76,7 @@ func day3commons(input []string, idx int) int {
 	return common
 }
 
-func day3b(input io.Reader) (int, error) {
+func day3b(input io.Reader) int {
 	o2 := scanLines(input)
 	co2 := make([]string, len(o2))
 	copy(co2, o2)
@@ -117,26 +113,25 @@ func day3b(input io.Reader) (int, error) {
 
 	o2gen, err := strconv.ParseUint(o2[0], 2, 64)
 	if err != nil {
-		return 0, err
+		panic(err)
 	}
 	co2gen, err := strconv.ParseUint(co2[0], 2, 64)
 	if err != nil {
-		return 0, err
+		panic(err)
 	}
 
-	return int(o2gen * co2gen), nil
+	return int(o2gen * co2gen)
 }
 
-func Day3b() error {
+func Day3b() {
 	f, err := os.Open("input/day03.txt")
 	if err != nil {
-		return err
+		panic(err)
 	}
 	defer f.Close()
-	result, err := day3b(f)
+	result := day3b(f)
 	if err != nil {
-		return err
+		panic(err)
 	}
 	fmt.Printf("day 3b: %d\n", result)
-	return nil
 }

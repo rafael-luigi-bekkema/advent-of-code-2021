@@ -20,12 +20,12 @@ func main() {
 
 	fmt.Print("advent of code 2021\n\n")
 
-	must(Day1a)
-	must(Day1b)
-	must(Day2a)
-	must(Day2b)
-	must(Day3a)
-	must(Day3b)
+	Day1a()
+	Day1b()
+	Day2a()
+	Day2b()
+	Day3a()
+	Day3b()
 	Day4a()
 	Day4b()
 	Day5a()
@@ -48,12 +48,6 @@ func main() {
 	Day13b()
 
 	fmt.Print("\n\n")
-}
-
-func must(f func() error) {
-	if err := f(); err != nil {
-		panic(err)
-	}
 }
 
 func runTests(name string) {

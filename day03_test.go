@@ -19,20 +19,14 @@ func TestDay3a(t *testing.T) {
 00010
 01010`
 	expect := 198
-	result, err := day3a(strings.NewReader(input))
-	if err != nil {
-		t.Fatal(err)
-	}
+	result := day3a(strings.NewReader(input))
 	if result != expect {
 		t.Fatalf("expected %d, got %d", expect, result)
 	}
 }
 
 func ExampleDay3a() {
-	err := Day3a()
-	if err != nil {
-		panic(err)
-	}
+	Day3a()
 	// Output: day 3a: 3847100
 }
 
@@ -50,19 +44,13 @@ func TestDay3b(t *testing.T) {
 00010
 01010`
 	expect := 230
-	result, err := day3b(strings.NewReader(input))
-	if err != nil {
-		t.Fatal(err)
-	}
+	result := day3b(strings.NewReader(input))
 	if result != expect {
 		t.Fatalf("expected %d, got %d", expect, result)
 	}
 }
 
 func ExampleDay3b() {
-	err := Day3b()
-	if err != nil {
-		panic(err)
-	}
+	Day3b()
 	// Output: day 3b: 4105235
 }

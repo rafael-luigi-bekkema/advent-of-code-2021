@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-func day2a(input io.Reader) (int, error) {
+func day2a(input io.Reader) int {
 	s := bufio.NewScanner(input)
 
 	var horizontal, depth int
@@ -16,7 +16,7 @@ func day2a(input io.Reader) (int, error) {
 		var amount int
 		_, err := fmt.Sscanf(s.Text(), "%s %d", &direction, &amount)
 		if err != nil {
-			return 0, fmt.Errorf("could not scan line: %w", err)
+			panic(err)
 		}
 		switch direction {
 		case "down":
@@ -27,24 +27,20 @@ func day2a(input io.Reader) (int, error) {
 			horizontal += amount
 		}
 	}
-	return horizontal * depth, nil
+	return horizontal * depth
 }
 
-func Day2a() error {
+func Day2a() {
 	f, err := os.Open("input/day02.txt")
 	if err != nil {
-		return err
+		panic(err)
 	}
 	defer f.Close()
-	num, err := day2a(f)
-	if err != nil {
-		return err
-	}
+	num := day2a(f)
 	fmt.Printf("day 2a: %d\n", num)
-	return nil
 }
 
-func day2b(input io.Reader) (int, error) {
+func day2b(input io.Reader) int {
 	s := bufio.NewScanner(input)
 
 	var horizontal, depth, aim int
@@ -53,7 +49,7 @@ func day2b(input io.Reader) (int, error) {
 		var amount int
 		_, err := fmt.Sscanf(s.Text(), "%s %d", &direction, &amount)
 		if err != nil {
-			return 0, fmt.Errorf("could not scan line: %w", err)
+			panic(err)
 		}
 		switch direction {
 		case "down":
@@ -65,19 +61,15 @@ func day2b(input io.Reader) (int, error) {
 			depth += aim * amount
 		}
 	}
-	return horizontal * depth, nil
+	return horizontal * depth
 }
 
-func Day2b() error {
+func Day2b() {
 	f, err := os.Open("input/day02.txt")
 	if err != nil {
-		return err
+		panic(err)
 	}
 	defer f.Close()
-	num, err := day2b(f)
-	if err != nil {
-		return err
-	}
+	num := day2b(f)
 	fmt.Printf("day 2b: %d\n", num)
-	return nil
 }
