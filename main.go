@@ -61,7 +61,5 @@ func runTests(name string) {
 func testWatcher() {
 	runTests("")
 
-	watchFiles(func(fileName string) {
-		runTests(fileName)
-	}, fsnotify.Write|fsnotify.Rename|fsnotify.Remove, "")
+	watchFiles(runTests, fsnotify.Write|fsnotify.Rename|fsnotify.Remove, "")
 }
