@@ -107,5 +107,6 @@ func Day13b() {
 	defer f.Close()
 	var s strings.Builder
 	day13a(f, -1, &s)
+	fmt.Println("day 13b:")
 	fmt.Println(s.String())
 }

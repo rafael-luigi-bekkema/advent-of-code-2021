@@ -19,24 +19,13 @@ func main() {
 	}
 
 	fmt.Print("advent of code 2021\n\n")
-	funcErrs := []func() error{
-		Day1a,
-		Day1b,
-		Day2a,
-		Day2b,
-		Day3a,
-		Day3b,
-	}
-	for _, f := range funcErrs {
-		if err := f(); err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
-	}
 
-	// Switched to just using panics
-	// no reason to do proper error handling
-
+	must(Day1a)
+	must(Day1b)
+	must(Day2a)
+	must(Day2b)
+	must(Day3a)
+	must(Day3b)
 	Day4a()
 	Day4b()
 	Day5a()
@@ -45,8 +34,26 @@ func main() {
 	Day6b()
 	Day7a()
 	Day7b()
+	Day8a()
+	Day8b()
+	Day9a()
+	Day9b()
+	Day10a()
+	Day10b()
+	Day11a()
+	Day11b()
+	Day12a()
+	Day12b()
+	Day13a()
+	Day13b()
 
 	fmt.Print("\n\n")
+}
+
+func must(f func() error) {
+	if err := f(); err != nil {
+		panic(err)
+	}
 }
 
 func runTests(name string) {
