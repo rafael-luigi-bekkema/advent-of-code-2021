@@ -39,45 +39,64 @@ func day14parseInput(input io.Reader) day14input {
 	return pinp
 }
 
-func day14a(input day14input, steps int) int {
-	template := make([]byte, len(input.template), 524_288_000)
-	copy(template, input.template)
-
-	for step := 1; step <= steps; step++ {
-		for i := 0; i < len(template)-1; i++ {
-			var pair [2]byte
-			copy(pair[:], template[i:i+2])
-			if insert, ok := input.rules[pair]; ok {
-				template = append(template, 0)
-				copy(template[i+2:], template[i+1:])
-				template[i+1] = insert
-				i++
-			}
-		}
-	}
-
-	counts := map[byte]int{}
-	for _, b := range template {
-		counts[b]++
-	}
-	var minc, maxc int
-	for _, c := range counts {
-		if maxc == 0 || c > maxc {
-			maxc = c
-		}
-		if minc == 0 || c < minc {
-			minc = c
-		}
-	}
-	return maxc - minc
-}
-
 func Day14a() {
 	f, err := os.Open("input/day14.txt")
 	if err != nil {
 		panic(err)
 	}
 	defer f.Close()
-	result := day14a(day14parseInput(f), 10)
+	result := day14b(day14parseInput(f), 10)
 	fmt.Printf("day 14a: %d\n", result)
+}
+
+func day14b(input day14input, steps int) int {
+	type pair [2]byte
+
+	pairs := map[pair]int{}
+	for i := 0; i < len(input.template)-1; i++ {
+		p := pair{input.template[i], input.template[i+1]}
+		pairs[p]++
+	}
+	ccount := map[byte]int{}
+	for _, c := range input.template {
+		ccount[c]++
+	}
+
+	// We don't have to build the complete string.
+	// Just keep track of the pair counts and count new chars we make.
+	for step := 1; step <= steps; step++ {
+		newpairs := map[pair]int{}
+		for p, count := range pairs {
+			b := input.rules[p]
+			p1 := pair{p[0], b}
+			p2 := pair{b, p[1]}
+
+			ccount[b] += count
+
+			newpairs[p1] += count
+			newpairs[p2] += count
+		}
+		pairs = newpairs
+	}
+
+	var imin, imax int
+	for _, count := range ccount {
+		if imin == 0 || count < imin {
+			imin = count
+		}
+		if count > imax {
+			imax = count
+		}
+	}
+	return imax - imin
+}
+
+func Day14b() {
+	f, err := os.Open("input/day14.txt")
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	result := day14b(day14parseInput(f), 40)
+	fmt.Printf("day 14b: %d\n", result)
 }
