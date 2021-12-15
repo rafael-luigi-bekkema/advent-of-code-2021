@@ -2,11 +2,36 @@ package main
 
 import (
 	"bufio"
+	"container/heap"
 	"fmt"
 	"io"
 	"math"
 	"os"
 )
+
+type pNode struct {
+	n Node
+	p float64
+}
+type FloatHeap []pNode
+
+func (h FloatHeap) Len() int           { return len(h) }
+func (h FloatHeap) Less(i, j int) bool { return h[i].p < h[j].p }
+func (h FloatHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
+
+func (h *FloatHeap) Push(x interface{}) {
+	// Push and Pop use pofloat64er receivers because they modify the slice's length,
+	// not just its contents.
+	*h = append(*h, x.(pNode))
+}
+
+func (h *FloatHeap) Pop() interface{} {
+	old := *h
+	n := len(old)
+	x := old[n-1]
+	*h = old[0 : n-1]
+	return x
+}
 
 type Node struct {
 	x, y int
@@ -36,7 +61,8 @@ func (g *Graph) AddNode(n Node) {
 
 func (g *Graph) Dijkstra(source, dest Node) (dist map[Node]float64, prev map[Node]*Node) {
 	inf := math.Inf(1)
-	Q := []Node{source}
+	pQ := &FloatHeap{pNode{source, 0}}
+	heap.Init(pQ)
 	dist = make(map[Node]float64)
 	prev = make(map[Node]*Node)
 	visited := make(map[Node]struct{})
@@ -45,27 +71,16 @@ func (g *Graph) Dijkstra(source, dest Node) (dist map[Node]float64, prev map[Nod
 	}
 	dist[source] = 0
 
-	for len(Q) > 0 {
-		var mindist float64
-		var mini int
-		minfirst := true
+	for pQ.Len() > 0 {
+		pN := heap.Pop(pQ).(pNode)
+		minn := pN.n
 
-		for i, n := range Q {
-			if d := dist[n]; minfirst || d < mindist {
-				mindist = d
-				mini = i
-				minfirst = false
-			}
-		}
-		minn := Q[mini]
 		if dist[minn] == inf {
 			panic("nooo")
 		}
 		if minn == dest {
 			break
 		}
-		Q[mini], Q[len(Q)-1] = Q[len(Q)-1], Q[mini]
-		Q = Q[:len(Q)-1]
 		visited[minn] = struct{}{}
 
 		for edge, edgeVal := range g.edges[minn] {
@@ -77,7 +92,7 @@ func (g *Graph) Dijkstra(source, dest Node) (dist map[Node]float64, prev map[Nod
 			if alt < dist[edge] {
 				dist[edge] = alt
 				prev[edge] = &minn
-				Q = append(Q, edge)
+				heap.Push(pQ, pNode{edge, alt})
 			}
 		}
 	}
