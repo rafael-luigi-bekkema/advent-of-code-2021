@@ -35,19 +35,17 @@ func (g *Graph) AddNode(n Node) {
 }
 
 func (g *Graph) Dijkstra(source, dest Node) (dist map[Node]float64, prev map[Node]*Node) {
-	Q := make([]Node, 0, len(g.nodes))
-	dist = make(map[Node]float64, len(g.nodes))
+	inf := math.Inf(1)
+	Q := []Node{source}
+	dist = make(map[Node]float64)
 	prev = make(map[Node]*Node)
-	Q = append(Q, source)
-	visited := make(map[Node]struct{}, len(g.nodes))
+	visited := make(map[Node]struct{})
 	for node := range g.nodes {
-		dist[node] = math.Inf(1)
+		dist[node] = inf
 	}
 	dist[source] = 0
 
 	for len(Q) > 0 {
-		// fmt.Fprintf(os.Stderr, "Q left: %d\n", len(g.nodes)-len(visited))
-
 		var mindist float64
 		var mini int
 		minfirst := true
@@ -60,7 +58,7 @@ func (g *Graph) Dijkstra(source, dest Node) (dist map[Node]float64, prev map[Nod
 			}
 		}
 		minn := Q[mini]
-		if dist[minn] == math.Inf(1) {
+		if dist[minn] == inf {
 			panic("nooo")
 		}
 		if minn == dest {
