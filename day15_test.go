@@ -48,5 +48,5 @@ func TestDay15b(t *testing.T) {
 
 func ExampleDay15b() {
 	Day15b()
-	// Output: day 15b: 540
+	// Output: day 15b: 2879
 }

@@ -35,32 +35,43 @@ func (g *Graph) AddNode(n Node) {
 }
 
 func (g *Graph) Dijkstra(source, dest Node) (dist map[Node]float64, prev map[Node]*Node) {
-	Q := make(map[Node]struct{}, len(g.nodes))
+	Q := make([]Node, 0, len(g.nodes))
 	dist = make(map[Node]float64, len(g.nodes))
 	prev = make(map[Node]*Node)
+	Q = append(Q, source)
+	visited := make(map[Node]struct{}, len(g.nodes))
 	for node := range g.nodes {
-		Q[node] = struct{}{}
 		dist[node] = math.Inf(1)
 	}
 	dist[source] = 0
 
 	for len(Q) > 0 {
+		// fmt.Fprintf(os.Stderr, "Q left: %d\n", len(g.nodes)-len(visited))
+
 		var mindist float64
-		var minn Node
+		var mini int
 		minfirst := true
-		for n := range Q {
+
+		for i, n := range Q {
 			if d := dist[n]; minfirst || d < mindist {
 				mindist = d
-				minn = n
+				mini = i
 				minfirst = false
 			}
 		}
-		if dist[minn] == math.Inf(1) || minn == dest {
+		minn := Q[mini]
+		if dist[minn] == math.Inf(1) {
+			panic("nooo")
+		}
+		if minn == dest {
 			break
 		}
-		delete(Q, minn)
+		Q[mini], Q[len(Q)-1] = Q[len(Q)-1], Q[mini]
+		Q = Q[:len(Q)-1]
+		visited[minn] = struct{}{}
+
 		for edge, edgeVal := range g.edges[minn] {
-			if _, ok := Q[edge]; !ok {
+			if _, ok := visited[edge]; ok {
 				continue
 			}
 
@@ -68,6 +79,7 @@ func (g *Graph) Dijkstra(source, dest Node) (dist map[Node]float64, prev map[Nod
 			if alt < dist[edge] {
 				dist[edge] = alt
 				prev[edge] = &minn
+				Q = append(Q, edge)
 			}
 		}
 	}
