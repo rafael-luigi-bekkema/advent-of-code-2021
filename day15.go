@@ -34,54 +34,33 @@ func (g *Graph) AddNode(n Node) {
 	g.nodes[n] = struct{}{}
 }
 
-var inf = math.Inf(1)
-
-type pQueue struct {
-	queue map[Node]float64
-}
-
-func (pq *pQueue) addWithPriority(n Node, p float64) {
-	pq.queue[n] = p
-}
-
-func (pq *pQueue) decreasePriority(n Node, p float64) {
-	pq.queue[n] -= p
-}
-
-func (pq *pQueue) extractMin() Node {
-	var minn Node
-	minp := inf
-	var first = true
-	for n, p := range pq.queue {
-		if first || p < minp {
-			p = minp
-			minn = n
-			first = false
-		}
-	}
-	delete(pq.queue, minn)
-	return minn
-}
-
 func (g *Graph) Dijkstra(source, dest Node) (dist map[Node]float64, prev map[Node]*Node) {
-	pQ := pQueue{queue: make(map[Node]float64, len(g.nodes))}
+	Q := make(map[Node]struct{}, len(g.nodes))
 	dist = make(map[Node]float64, len(g.nodes))
 	prev = make(map[Node]*Node)
-	dist[source] = 0
 	for node := range g.nodes {
-		if node != source {
-			dist[node] = inf
-		}
-		pQ.addWithPriority(node, dist[node])
+		Q[node] = struct{}{}
+		dist[node] = math.Inf(1)
 	}
+	dist[source] = 0
 
-	for len(pQ.queue) > 0 {
-		minn := pQ.extractMin()
-		if dist[minn] == inf || minn == dest {
+	for len(Q) > 0 {
+		var mindist float64
+		var minn Node
+		minfirst := true
+		for n := range Q {
+			if d := dist[n]; minfirst || d < mindist {
+				mindist = d
+				minn = n
+				minfirst = false
+			}
+		}
+		if dist[minn] == math.Inf(1) || minn == dest {
 			break
 		}
+		delete(Q, minn)
 		for edge, edgeVal := range g.edges[minn] {
-			if _, ok := pQ.queue[edge]; !ok {
+			if _, ok := Q[edge]; !ok {
 				continue
 			}
 
@@ -89,7 +68,6 @@ func (g *Graph) Dijkstra(source, dest Node) (dist map[Node]float64, prev map[Nod
 			if alt < dist[edge] {
 				dist[edge] = alt
 				prev[edge] = &minn
-				pQ.decreasePriority(edge, alt)
 			}
 		}
 	}
