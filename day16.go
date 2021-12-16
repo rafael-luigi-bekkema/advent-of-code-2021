@@ -34,6 +34,63 @@ func (pak Packet) String() string {
 	return fmt.Sprintf("ver: %d, type: %d%s\n%s", pak.ver, pak.typeID, literal, strings.Join(subs, ""))
 }
 
+func (pak Packet) value() int64 {
+	var total int64
+	switch pak.typeID {
+	case 0:
+		for _, sub := range pak.sub {
+			total += sub.value()
+		}
+	case 1:
+		for i, sub := range pak.sub {
+			if i == 0 {
+				total = sub.value()
+				continue
+			}
+			total *= sub.value()
+		}
+	case 2: //min
+		for i, sub := range pak.sub {
+			val := sub.value()
+			if i == 0 {
+				total = val
+				continue
+			}
+			if val < total {
+				total = val
+			}
+		}
+	case 3: //max
+		for i, sub := range pak.sub {
+			val := sub.value()
+			if i == 0 {
+				total = val
+				continue
+			}
+			if val > total {
+				total = val
+			}
+		}
+	case 4:
+		total, _ = strconv.ParseInt(pak.literal, 2, 64)
+	case 5:
+		if pak.sub[0].value() > pak.sub[1].value() {
+			total = 1
+		}
+	case 6:
+		if pak.sub[0].value() < pak.sub[1].value() {
+			total = 1
+		}
+	case 7:
+		if pak.sub[0].value() == pak.sub[1].value() {
+			total = 1
+		}
+	default:
+		panic(fmt.Sprintf("Unknown typeID: %d", pak.typeID))
+	}
+	return total
+}
+
 func (pak Packet) verSum() int64 {
 	total := pak.ver
 	for _, sub := range pak.sub {
@@ -115,4 +172,26 @@ func Day16a() {
 	}
 	result := day16a(string(data))
 	fmt.Printf("day 16a: %d\n", result)
+}
+
+func day16b(input string) int {
+	str := make([]string, len(input))
+	for i, c := range input {
+		num, _ := strconv.ParseInt(string(c), 16, 64)
+		bin := fmt.Sprintf("%04b", num)
+		str[i] = bin
+	}
+	msg := message(strings.TrimRight(strings.Join(str, ""), "0"))
+	pak := parsePacket(&msg)
+
+	return int(pak.value())
+}
+
+func Day16b() {
+	data, err := os.ReadFile("input/day16.txt")
+	if err != nil {
+		panic(err)
+	}
+	result := day16b(string(data))
+	fmt.Printf("day 16b: %d\n", result)
 }
