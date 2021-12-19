@@ -1,30 +1,58 @@
 package main
 
 import (
-	"container/list"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
 )
 
+type tokT byte
+
+const (
+	tokLeftBr tokT = iota
+	tokRightBr
+	tokComma
+	tokEOL
+	tokNum
+)
+
+func (t tokT) String() string {
+	switch t {
+	case tokLeftBr:
+		return "["
+	case tokRightBr:
+		return "]"
+	case tokComma:
+		return ","
+	default:
+		return ""
+	}
+}
+
 type tokenizer struct {
 	data string
 }
 
 type token struct {
-	typ   string
+	typ   tokT
 	value int
 }
 
 func (t *tokenizer) token() token {
 	if t.data == "" {
-		return token{typ: ""}
+		return token{typ: tokEOL}
 	}
 	switch c := t.data[0:1]; c {
-	case "[", "]", ",":
+	case "[":
 		t.data = t.data[1:]
-		return token{typ: c}
+		return token{typ: tokLeftBr}
+	case "]":
+		t.data = t.data[1:]
+		return token{typ: tokRightBr}
+	case ",":
+		t.data = t.data[1:]
+		return token{typ: tokComma}
 	default:
 		var num []rune
 		for _, c := range t.data {
@@ -35,121 +63,121 @@ func (t *tokenizer) token() token {
 		}
 		t.data = t.data[len(num):]
 		val, _ := strconv.Atoi(string(num))
-		return token{typ: "num", value: val}
+		return token{typ: tokNum, value: val}
 	}
 }
 
-func toStr(fish *list.List) string {
+func toStr(fish []interface{}) string {
 	var s strings.Builder
-	for e := fish.Front(); e != nil; e = e.Next() {
-		s.WriteString(fmt.Sprint(e.Value))
+	for _, e := range fish {
+		s.WriteString(fmt.Sprint(e))
 	}
 	return s.String()
 }
 
-func reduce(fish *list.List) {
+func reduce(fish []interface{}) []interface{} {
 outer:
 	for {
 		clb := 0
-		for e := fish.Front(); e != nil; e = e.Next() {
-			if e.Value == "[" {
+		for i, e := range fish {
+			if e == tokLeftBr {
 				clb++
 				if clb == 5 { // explode
-					left := e.Next()
-					right := left.Next().Next()
+					left := fish[i+1]
+					right := fish[i+3]
 
-					for e := left.Prev(); e != nil; e = e.Prev() {
-						if v, ok := e.Value.(int); ok {
-							e.Value = v + (left.Value.(int))
+					for j := i; j >= 0; j-- {
+						if v, ok := fish[j].(int); ok {
+							fish[j] = v + (left.(int))
 							break
 						}
 					}
-					for e := right.Next(); e != nil; e = e.Next() {
-						if v, ok := e.Value.(int); ok {
-							e.Value = v + (right.Value.(int))
+					for j := i + 4; j <= len(fish)-1; j++ {
+						if v, ok := fish[j].(int); ok {
+							fish[j] = v + (right.(int))
 							break
 						}
 					}
 
-					e.Value = 0
-					fish.Remove(e.Next()) // num
-					fish.Remove(e.Next()) // ,
-					fish.Remove(e.Next()) // num
-					fish.Remove(e.Next()) // ]
+					fish[i] = 0
+					fish = append(fish[:i+1], fish[i+5:]...)
 					continue outer
 				}
 			}
-			if e.Value == "]" {
+			if e == tokRightBr {
 				clb--
 			}
 		}
-		for e := fish.Front(); e != nil; e = e.Next() {
-			if v, ok := e.Value.(int); ok && v >= 10 { // split
-				e.Value = "["
+		for i, e := range fish {
+			if v, ok := e.(int); ok && v >= 10 { // split
 				div := v / 2
-				e = fish.InsertAfter(div, e)
-				e = fish.InsertAfter(",", e)
+				div2 := div
 				if v%2 != 0 {
-					div += 1
+					div2 += 1
 				}
-				e = fish.InsertAfter(div, e)
-				e = fish.InsertAfter("]", e)
+				rest := make([]interface{}, len(fish[i+1:]))
+				copy(rest, fish[i+1:])
+				fish = append(fish[:i], tokLeftBr, div, tokComma, div2, tokRightBr)
+				fish = append(fish, rest...)
 				continue outer
 			}
 		}
 		break
 	}
+	return fish
 }
 
-func day18sum(input []string) *list.List {
-	fish := list.New()
+func day18sum(input []string) []interface{} {
+	var fish []interface{}
 	for i, line := range input {
 		if i > 0 {
-			fish.PushFront("[")
-			fish.PushBack(",")
+			fish = append([]interface{}{tokLeftBr}, fish...)
+			fish = append(fish, tokComma)
 		}
 
 		t := tokenizer{line}
-		for tok := t.token(); tok.typ != ""; tok = t.token() {
-			if tok.typ == "num" {
-				fish.PushBack(tok.value)
+		for tok := t.token(); tok.typ != tokEOL; tok = t.token() {
+			if tok.typ == tokNum {
+				fish = append(fish, tok.value)
 			} else {
-				fish.PushBack(tok.typ)
+				fish = append(fish, tok.typ)
 			}
 		}
 
 		if i > 0 {
-			fish.PushBack("]")
-			reduce(fish)
+			fish = append(fish, tokRightBr)
+			fish = reduce(fish)
 		}
 	}
 	return fish
 }
 
-// [[[[0,7],4],[[7,8],[6,0]]],[8,1]]
-func magnitude(e *list.Element) (int, *list.Element) {
+func magnitude(fish []interface{}) (int, []interface{}) {
 	var left, right int
 
-	e = e.Next()
-	if e.Value == "[" {
-		left, e = magnitude(e)
+	if fish[1] == tokLeftBr {
+		left, fish = magnitude(fish[1:])
 	} else {
-		left = e.Value.(int)
-	}
-	e = e.Next().Next() // skip ,
-
-	if e.Value == "[" {
-		right, e = magnitude(e)
-	} else {
-		right = e.Value.(int)
+		left = fish[1].(int)
+		fish = fish[2:]
 	}
 
-	e = e.Next()
-	return 3*left + 2*right, e
+	if fish[1] == tokLeftBr {
+		right, fish = magnitude(fish[1:])
+		fish = fish[1:]
+	} else {
+		if tok, ok := fish[1].(tokT); ok {
+			fmt.Println(toStr(fish), "=", tok)
+		}
+		right = fish[1].(int)
+		fish = fish[3:]
+	}
+
+	return 3*left + 2*right, fish
 }
 
-func day18a(l *list.List) int {
-	num, _ := magnitude(l.Front())
+func day18a(input []interface{}) int {
+	num, _ := magnitude(input)
 	return num
 }
 
