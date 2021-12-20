@@ -9,7 +9,14 @@ import (
 	"sort"
 )
 
-type Nodes = map[coord3]struct{}
+type nodeType int
+
+const (
+	ntScanner nodeType = iota
+	ntBacon
+)
+
+type Nodes = map[coord3]nodeType
 
 type ax string
 
@@ -25,7 +32,7 @@ type coord3 struct {
 
 type scanner struct {
 	num     int
-	beacons Nodes
+	beacons []coord3
 }
 
 func day19input(input io.Reader) []scanner {
@@ -35,7 +42,7 @@ func day19input(input io.Reader) []scanner {
 		if !s.Scan() {
 			break
 		}
-		scnr := scanner{beacons: make(Nodes)}
+		scnr := scanner{}
 		fmt.Sscanf(s.Text(), "--- scanner %d ---", &scnr.num)
 
 		for s.Scan() {
@@ -44,7 +51,7 @@ func day19input(input io.Reader) []scanner {
 			}
 			var bacon coord3
 			fmt.Sscanf(s.Text(), "%d,%d,%d", &bacon.x, &bacon.y, &bacon.z)
-			scnr.beacons[bacon] = struct{}{}
+			scnr.beacons = append(scnr.beacons, bacon)
 		}
 
 		scnrs = append(scnrs, scnr)
@@ -61,7 +68,7 @@ func rotate(deg int, ax ax, nodes Nodes) Nodes {
 	var sinTheta = math.Sin(theta)
 	var cosTheta = math.Cos(theta)
 	newNodes := make(Nodes)
-	for node := range nodes {
+	for node, typ := range nodes {
 		var newnode coord3
 		switch ax {
 		case axZ:
@@ -79,7 +86,7 @@ func rotate(deg int, ax ax, nodes Nodes) Nodes {
 		default:
 			panic("unknown ax")
 		}
-		newNodes[newnode] = struct{}{}
+		newNodes[newnode] = typ
 	}
 	return newNodes
 }
@@ -93,16 +100,11 @@ func (r rot) String() string {
 	return fmt.Sprintf("rot: %s: %v", r.ax, r.angle)
 }
 
-func rotates(nodes Nodes, rots []rot) Nodes {
+func rotates(nodes Nodes, rots [2]rot) Nodes {
 	for _, rot := range rots {
 		nodes = rotate(rot.angle, rot.ax, nodes)
 	}
 	return nodes
-}
-
-type rotCache struct {
-	rot [2]rot
-	num int
 }
 
 func toSlice(nodes Nodes) (result []coord3) {
@@ -121,80 +123,123 @@ func toSlice(nodes Nodes) (result []coord3) {
 	return
 }
 
-func combos() (result [][]rot) {
-	for _, angA := range []int{0, 180} {
-		for _, angB := range []int{180, 270} {
-			result = append(result, []rot{{axX, angA}, {axY, angB}})
-			result = append(result, []rot{{axX, angA}, {axZ, angB}})
+func combos() (result [][2]rot) {
+	// no idea why this works
+	// too hard
+	// but it works
+	for i := 0; i < 3; i++ {
+		result = append(result, [2]rot{{axX, 0}, {axY, 0}})
+		result = append(result, [2]rot{{axX, 0}, {axY, 90}})
+		result = append(result, [2]rot{{axZ, 90}, {axY, 0}})
 
-			result = append(result, []rot{{axY, angA}, {axX, angB}})
-			result = append(result, []rot{{axY, angA}, {axZ, angB}})
-
-			result = append(result, []rot{{axZ, angA}, {axX, angB}})
-			result = append(result, []rot{{axZ, angA}, {axY, angB}})
-		}
+		result = append(result, [2]rot{{axX, 180}, {axY, 0}}) // ax flip
+		result = append(result, [2]rot{{axX, 0}, {axY, 90}})
+		result = append(result, [2]rot{{axZ, 90}, {axY, 0}})
 	}
 	return
 }
 
-func day19a(input []scanner) int {
-	grid := make(Nodes)
-	for k, v := range input[0].beacons {
-		grid[k] = v
+func distance(items []coord3) int {
+	dist := 0
+	for i, itemA := range items {
+		for _, itemB := range items[i+1:] {
+			val := abs(itemA.x-itemB.x) + abs(itemA.y-itemB.y) + abs(itemA.z-itemB.z)
+			if val > dist {
+				dist = val
+			}
+		}
+	}
+	return dist
+}
+
+func day19a(input []scanner) (int, int) {
+	grid := Nodes{coord3{0, 0, 0}: ntScanner}
+	for _, v := range input[0].beacons {
+		grid[v] = ntBacon
 	}
 
-	// cache := map[rotCache]Nodes{}
+	// comboChan := make(chan Nodes)
+	// go func() {
+	// 	for {
+	// 		for _, combo := range combos() {
+	// 			comboChan <- rotates(grid, combo)
+	// 		}
+	// 	}
+	// }()
 
+	rotateCount := 0
 	left := input[1:]
 outer:
-	for i := 0; i < len(left); i++ {
-		scnr := left[i]
+	for len(left) > 0 {
+		change := false
 		for _, combo := range combos() {
 			grid = rotates(grid, combo)
-			for baconA := range grid {
-				beacons := scnr.beacons
-				for baconBa := range beacons {
-					match := 1
-					var others []coord3
-					for baconBb := range beacons {
-						if baconBa == baconBb {
-							continue
-						}
-						deltax := baconBb.x - baconBa.x
-						deltay := baconBb.y - baconBa.y
-						deltaz := baconBb.z - baconBa.z
-
-						n := coord3{x: baconA.x + deltax, y: baconA.y + deltay, z: baconA.z + deltaz}
-						if _, ok := grid[n]; ok {
-							match++
-						} else {
-							others = append(others, n)
-						}
+			for i, scnr := range left {
+				for baconA, typ := range grid {
+					if typ == ntScanner {
+						continue
 					}
-					if match >= 12 {
-						for _, other := range others {
-							grid[other] = struct{}{}
+					beacons := scnr.beacons
+					for bai, baconBa := range beacons {
+						match := 1
+						var others []coord3
+						_ = bai
+						for _, baconBb := range beacons {
+							if baconBa == baconBb {
+								continue
+							}
+							deltax := baconBb.x - baconBa.x
+							deltay := baconBb.y - baconBa.y
+							deltaz := baconBb.z - baconBa.z
+
+							n := coord3{x: baconA.x + deltax, y: baconA.y + deltay,
+								z: baconA.z + deltaz}
+							if _, ok := grid[n]; ok {
+								match++
+							} else {
+								others = append(others, n)
+							}
 						}
-						left[i], left[len(left)-1] = left[len(left)-1], left[i]
-						left = left[:len(left)-1]
-						i = -1
-						fmt.Printf("num: %v %v %v left: %v\n", scnr.num, match, combo, len(left))
-						continue outer
+						if match >= 12 {
+							for _, other := range others {
+								grid[other] = ntBacon
+							}
+							left[i], left[len(left)-1] = left[len(left)-1], left[i]
+							left = left[:len(left)-1]
+							fmt.Printf("num: %v %v %v left: %v\n", scnr.num, match, combo, len(left))
+							scanner := coord3{x: baconA.x - baconBa.x, y: baconA.y - baconBa.y,
+								z: baconA.z - baconBa.z}
+							change = true
+							grid[scanner] = ntScanner
+							continue outer
+						}
 					}
 				}
 			}
 		}
+		if !change {
+			break
+		}
 	}
-	fmt.Println("left", len(left), len(grid))
-	return len(grid)
+	fmt.Println("rotates:", rotateCount)
+	var scanners []coord3
+	for node, typ := range grid {
+		if typ == ntScanner {
+			scanners = append(scanners, node)
+		}
+	}
+	if len(left) > 0 {
+		panic("unmatched beacons")
+	}
+	return len(grid) - len(input), distance(scanners)
 }
 
-func Day19a() {
+func Day19() {
 	f, err := os.Open("input/day19.txt")
 	if err != nil {
 		panic(err)
 	}
 	defer f.Close()
-	result := day19a(day19input(f))
-	fmt.Printf("day 19a: %d\n", result)
+	resultA, resultB := day19a(day19input(f))
+	fmt.Printf("day 19: beacons: %d distance: %d\n", resultA, resultB)
 }
