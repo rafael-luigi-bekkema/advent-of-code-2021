@@ -3,13 +3,28 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
+	"runtime/pprof"
 
 	"github.com/fsnotify/fsnotify"
 )
 
 func main() {
+	cpuprofile := flag.String("profile", "", "")
+	flag.Parse()
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
+		Day19()
+		return
+	}
+
 	testWatcherP := flag.Bool("watch", false, "Run test watcher")
 	flag.Parse()
 
