@@ -6,6 +6,7 @@ import (
 	"io"
 	"math"
 	"os"
+	"runtime/pprof"
 	"sort"
 )
 
@@ -67,7 +68,7 @@ func rotate(deg int, ax ax, nodes Nodes) Nodes {
 	theta := float64(deg) * (math.Pi / 180)
 	var sinTheta = math.Sin(theta)
 	var cosTheta = math.Cos(theta)
-	newNodes := make(Nodes)
+	newNodes := make(Nodes, len(nodes))
 	for node, typ := range nodes {
 		var newnode coord3
 		switch ax {
@@ -153,21 +154,18 @@ func distance(items []coord3) int {
 }
 
 func day19a(input []scanner) (int, int) {
+	f, _ := os.Create("/tmp/aoc_profile.txt")
+	defer f.Close()
+	pprof.StartCPUProfile(f)
+	defer pprof.StopCPUProfile()
+
 	grid := Nodes{coord3{0, 0, 0}: ntScanner}
 	for _, v := range input[0].beacons {
 		grid[v] = ntBacon
 	}
 
-	// comboChan := make(chan Nodes)
-	// go func() {
-	// 	for {
-	// 		for _, combo := range combos() {
-	// 			comboChan <- rotates(grid, combo)
-	// 		}
-	// 	}
-	// }()
-
 	rotateCount := 0
+	others := make([]coord3, 0, len(grid))
 	left := input[1:]
 outer:
 	for len(left) > 0 {
@@ -180,10 +178,9 @@ outer:
 						continue
 					}
 					beacons := scnr.beacons
-					for bai, baconBa := range beacons {
+					for _, baconBa := range beacons {
 						match := 1
-						var others []coord3
-						_ = bai
+						others = others[:0]
 						for _, baconBb := range beacons {
 							if baconBa == baconBb {
 								continue
