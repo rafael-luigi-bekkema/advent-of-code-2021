@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"os"
 	"sort"
 )
 
@@ -92,7 +93,7 @@ func (r rot) String() string {
 	return fmt.Sprintf("rot: %s: %v", r.ax, r.angle)
 }
 
-func rotates(nodes Nodes, rots [2]rot) Nodes {
+func rotates(nodes Nodes, rots []rot) Nodes {
 	for _, rot := range rots {
 		nodes = rotate(rot.angle, rot.ax, nodes)
 	}
@@ -120,17 +121,17 @@ func toSlice(nodes Nodes) (result []coord3) {
 	return
 }
 
-func combos() (result [][2]rot) {
+func combos() (result [][]rot) {
 	for _, angA := range []int{0, 180} {
-		for _, angB := range []int{90, -90} {
-			result = append(result, [2]rot{{axX, angA}, {axY, angB}})
-			result = append(result, [2]rot{{axX, angA}, {axZ, angB}})
+		for _, angB := range []int{180, 270} {
+			result = append(result, []rot{{axX, angA}, {axY, angB}})
+			result = append(result, []rot{{axX, angA}, {axZ, angB}})
 
-			result = append(result, [2]rot{{axY, angA}, {axX, angB}})
-			result = append(result, [2]rot{{axY, angA}, {axZ, angB}})
+			result = append(result, []rot{{axY, angA}, {axX, angB}})
+			result = append(result, []rot{{axY, angA}, {axZ, angB}})
 
-			result = append(result, [2]rot{{axZ, angA}, {axX, angB}})
-			result = append(result, [2]rot{{axZ, angA}, {axY, angB}})
+			result = append(result, []rot{{axZ, angA}, {axX, angB}})
+			result = append(result, []rot{{axZ, angA}, {axY, angB}})
 		}
 	}
 	return
@@ -145,12 +146,13 @@ func day19a(input []scanner) int {
 	// cache := map[rotCache]Nodes{}
 
 	left := input[1:]
+outer:
 	for i := 0; i < len(left); i++ {
 		scnr := left[i]
-	baconA:
-		for baconA := range grid {
-			for _, combo := range combos() {
-				beacons := rotates(scnr.beacons, combo)
+		for _, combo := range combos() {
+			grid = rotates(grid, combo)
+			for baconA := range grid {
+				beacons := scnr.beacons
 				for baconBa := range beacons {
 					match := 1
 					var others []coord3
@@ -170,19 +172,29 @@ func day19a(input []scanner) int {
 						}
 					}
 					if match >= 12 {
-						// for _, other := range others {
-						// 	grid[other] = struct{}{}
-						// }
+						for _, other := range others {
+							grid[other] = struct{}{}
+						}
 						left[i], left[len(left)-1] = left[len(left)-1], left[i]
 						left = left[:len(left)-1]
-						i = 0
-						fmt.Printf("num: %v %v\n", scnr.num, match)
-						break baconA
+						i = -1
+						fmt.Printf("num: %v %v %v left: %v\n", scnr.num, match, combo, len(left))
+						continue outer
 					}
 				}
 			}
 		}
 	}
-	fmt.Println("left", len(left))
-	return 0
+	fmt.Println("left", len(left), len(grid))
+	return len(grid)
+}
+
+func Day19a() {
+	f, err := os.Open("input/day19.txt")
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	result := day19a(day19input(f))
+	fmt.Printf("day 19a: %d\n", result)
 }
