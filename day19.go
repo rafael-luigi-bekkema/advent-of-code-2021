@@ -164,7 +164,6 @@ func day19a(input []scanner) (int, int) {
 		grid[v] = ntBacon
 	}
 
-	rotateCount := 0
 	others := make([]coord3, 0, len(grid))
 	left := input[1:]
 outer:
@@ -203,7 +202,7 @@ outer:
 							}
 							left[i], left[len(left)-1] = left[len(left)-1], left[i]
 							left = left[:len(left)-1]
-							fmt.Printf("num: %v %v %v left: %v\n", scnr.num, match, combo, len(left))
+							// fmt.Printf("num: %v %v %v left: %v\n", scnr.num, match, combo, len(left))
 							scanner := coord3{x: baconA.x - baconBa.x, y: baconA.y - baconBa.y,
 								z: baconA.z - baconBa.z}
 							change = true
@@ -218,7 +217,6 @@ outer:
 			break
 		}
 	}
-	fmt.Println("rotates:", rotateCount)
 	var scanners []coord3
 	for node, typ := range grid {
 		if typ == ntScanner {
