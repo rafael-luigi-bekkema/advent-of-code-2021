@@ -3,10 +3,7 @@ package main
 import (
 	"bufio"
 	"io"
-	"log"
 	"strconv"
-
-	"github.com/fsnotify/fsnotify"
 )
 
 func atoi(input string) int {
@@ -50,44 +47,4 @@ func abs(i int) int {
 		return i * -1
 	}
 	return i
-}
-
-func watchFiles(action func(fileName string), flag fsnotify.Op, paths ...string) {
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer watcher.Close()
-
-	handler := func(event fsnotify.Event) {
-		if event.Op&flag != 0 {
-			action(event.Name)
-		}
-	}
-
-	done := make(chan bool)
-	go func() {
-		for {
-			select {
-			case event, ok := <-watcher.Events:
-				if !ok {
-					return
-				}
-				handler(event)
-			case err, ok := <-watcher.Errors:
-				if !ok {
-					return
-				}
-				log.Println("watch error:", err)
-			}
-		}
-	}()
-
-	for _, path := range paths {
-		err = watcher.Add(path)
-	}
-	if err != nil {
-		log.Fatal(err)
-	}
-	<-done
 }

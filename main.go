@@ -1,38 +1,10 @@
 package main
 
 import (
-	"flag"
 	"fmt"
-	"log"
-	"os"
-	"os/exec"
-	"runtime/pprof"
-
-	"github.com/fsnotify/fsnotify"
 )
 
 func main() {
-	cpuprofile := flag.String("profile", "", "")
-	flag.Parse()
-	if *cpuprofile != "" {
-		f, err := os.Create(*cpuprofile)
-		if err != nil {
-			log.Fatal(err)
-		}
-		pprof.StartCPUProfile(f)
-		defer pprof.StopCPUProfile()
-		Day19()
-		return
-	}
-
-	testWatcherP := flag.Bool("watch", false, "Run test watcher")
-	flag.Parse()
-
-	if *testWatcherP {
-		testWatcher()
-		return
-	}
-
 	fmt.Print("advent of code 2021\n\n")
 
 	Day1a()
@@ -73,21 +45,8 @@ func main() {
 	Day18b()
 	Day19()
 	Day20()
+	Day21a()
+	Day21b()
 
 	fmt.Print("\n\n")
-}
-
-func runTests(name string) {
-	cmd := exec.Command("go", "test", "-timeout", "5s", "./...")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-	}
-}
-
-func testWatcher() {
-	runTests("")
-
-	watchFiles(runTests, fsnotify.Write|fsnotify.Rename|fsnotify.Remove, "")
 }
