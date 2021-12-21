@@ -29,3 +29,9 @@ func TestDay21b(t *testing.T) {
 		t.Fatalf("expected %d, got %d", expect, result)
 	}
 }
+
+func ExampleDay21b() {
+	Day21b()
+
+	// Output: day 21b: 301304993766094
+}
