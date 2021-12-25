@@ -226,7 +226,6 @@ func day23a(data []string) int {
 		defer close(out)
 		var mine int
 		grid.move(nil, 0, out, &mine)
-		fmt.Println("done!")
 	}()
 	var minval int
 	for val := range out {
@@ -304,7 +303,20 @@ func day23file() []string {
 	return strings.Split(strings.TrimRight(string(data), "\n"), "\n")
 }
 
+func day23bfile() []string {
+	input := day23file()
+	input = append(input, "  #D#C#B#A#", "  #D#B#A#C#")
+	input[5], input[3] = input[3], input[5]
+	input[6], input[4] = input[4], input[6]
+	return input
+}
+
 func Day23a() {
 	result := day23a(day23file())
+	fmt.Println("day 23a:", result)
+}
+
+func Day23b() {
+	result := day23a(day23bfile())
 	fmt.Println("day 23a:", result)
 }

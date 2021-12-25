@@ -46,8 +46,8 @@ func Day20() {
 	}
 	lines := strings.SplitN(string(data), "\n", 3)
 	result := day20(lines[0], lines[2], 2)
-	fmt.Println("day20a:", result)
+	fmt.Println("day 20a:", result)
 
 	result = day20(lines[0], lines[2], 50)
-	fmt.Println("day20b:", result)
+	fmt.Println("day 20b:", result)
 }

@@ -43,10 +43,7 @@ func TestDay23b(t *testing.T) {
 }
 
 func TestDay23b2(t *testing.T) {
-	input := day23file()
-	input = append(input, "  #D#C#B#A#", "  #D#B#A#C#")
-	input[5], input[3] = input[3], input[5]
-	input[6], input[4] = input[4], input[6]
+	input := day23bfile()
 	expect := 59071
 	result := day23a(input)
 	if result != expect {

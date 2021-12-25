@@ -24,11 +24,11 @@ func TestDay20a(t *testing.T) {
 	}
 }
 
-func ExampleDay20a() {
+func ExampleDay20() {
 	Day20()
 
-	// Output: day20a: 5218
-	// day20b: 15527
+	// Output: day 20a: 5218
+	// day 20b: 15527
 }
 
 func TestDay20b(t *testing.T) {

@@ -226,3 +226,11 @@ func day24a(alu *ALU, min bool) int {
 	}
 	return maxv
 }
+
+func Day24() {
+	alu := day24alu()
+	result := day24a(alu, false)
+	fmt.Println("day 24a:", result)
+	result = day24a(alu, false)
+	fmt.Println("day 24b:", result)
+}

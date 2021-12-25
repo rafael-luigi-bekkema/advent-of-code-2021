@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"os"
 	"sort"
 )
 
@@ -170,4 +171,26 @@ func day22b(inp io.Reader) int {
 		count += c.realSize()
 	}
 	return count
+}
+
+func day22file() io.ReadCloser {
+	f, err := os.Open("input/day22.txt")
+	if err != nil {
+		panic(err)
+	}
+	return f
+}
+
+func Day22a() {
+	f := day22file()
+	defer f.Close()
+	result := day22a(f)
+	fmt.Println("day 22a: ", result)
+}
+
+func Day22b() {
+	f := day22file()
+	defer f.Close()
+	result := day22b(f)
+	fmt.Println("day 22b: ", result)
 }

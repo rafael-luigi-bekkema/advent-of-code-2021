@@ -47,6 +47,12 @@ func main() {
 	Day20()
 	Day21a()
 	Day21b()
+	Day22a()
+	Day22b()
+	Day23a()
+	Day23b()
+	Day24()
+	Day25()
 
 	fmt.Print("\n\n")
 }

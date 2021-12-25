@@ -82,3 +82,9 @@ func Day25a() {
 	result := day25a(day25file())
 	fmt.Println("day 25a:", result)
 }
+
+
+func Day25() {
+	result := day25a(day25file())
+	fmt.Println("day 25:", result)
+}
