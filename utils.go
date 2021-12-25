@@ -59,13 +59,6 @@ func gcd(a, b int) int {
 	return a
 }
 
-func must[T any](a T, err error) T {
-	if err != nil {
-		panic(err)
-	}
-	return a
-}
-
 func pow(i, j int) int {
 	f := math.Pow(float64(i), float64(j))
 	return int(f)

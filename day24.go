@@ -36,7 +36,8 @@ func (alu *ALU) Val(name string) int {
 	if v := alu.ValPtr(name); v != nil {
 		return *v
 	}
-	return must(strconv.Atoi(name))
+	n, _ := strconv.Atoi(name)
+	return n
 }
 
 func (alu *ALU) Input(into *int, inp int) {
@@ -184,13 +185,16 @@ func day24try(alu *ALU, inputs []int, out chan int) {
 func intsToInt(result []int) int {
 	var val int
 	for i := range result {
-		val = val * 10 + result[i]
+		val = val*10 + result[i]
 	}
 	return val
 }
 
 func day24alu() *ALU {
-	f := must(os.Open("input/day24.txt"))
+	f, err  :=os.Open("input/day24.txt")
+	if err != nil {
+		panic(err)
+	}
 	defer f.Close()
 	return NewALU(f)
 }
