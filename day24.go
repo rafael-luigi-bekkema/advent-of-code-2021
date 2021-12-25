@@ -3,119 +3,122 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"strconv"
 	"strings"
 )
 
-func day24file() []string {
-	f := must(os.Open("input/day24.txt"))
-	defer f.Close()
-
-	var lines []string
-	s := bufio.NewScanner(f)
-	for s.Scan() {
-		lines = append(lines, s.Text())
-	}
-	return lines
-}
-
 type ALU struct {
 	w, x, y, z int
-	zes        [14]int
-	step       int
-	program    []string
+	program    []func(chan int)
 }
 
 func (alu *ALU) String() string {
 	return fmt.Sprintf("w=%d,x=%d,y=%d,z=%d", alu.w, alu.x, alu.y, alu.z)
 }
 
-func (alu *ALU) run(inputs []int) bool {
-	valp := func(s string) *int {
-		switch s {
-		case "w":
-			return &alu.w
-		case "x":
-			return &alu.x
-		case "y":
-			return &alu.y
-		case "z":
-			return &alu.z
-		}
-		return nil
+func (alu *ALU) ValPtr(name string) *int {
+	switch name {
+	case "w":
+		return &alu.w
+	case "x":
+		return &alu.x
+	case "y":
+		return &alu.y
+	case "z":
+		return &alu.z
 	}
-	val := func(s string) int {
-		if v := valp(s); v != nil {
-			return *v
-		}
-		return must(strconv.Atoi(s))
+	return nil
+}
+
+func (alu *ALU) Val(name string) int {
+	if v := alu.ValPtr(name); v != nil {
+		return *v
 	}
-	inpcount := 0
-	for _, line := range alu.program {
-		if line[0] == '#' {
-			continue
-		}
-		parts := strings.Split(line, " ")
+	return must(strconv.Atoi(name))
+}
+
+func (alu *ALU) Input(into *int, inp int) {
+	*into = inp
+}
+
+func (alu *ALU) Add(into *int, val int) {
+	*into += val
+}
+
+func (alu *ALU) Mul(into *int, val int) {
+	*into *= val
+}
+
+func (alu *ALU) Div(into *int, val int) {
+	*into /= val
+}
+
+func (alu *ALU) Mod(into *int, val int) {
+	*into %= val
+}
+
+func (alu *ALU) Eql(into *int, val int) {
+	if *into == val {
+		*into = 1
+	} else {
+		*into = 0
+	}
+}
+
+func NewALU(inp io.Reader) *ALU {
+	var alu ALU
+	s := bufio.NewScanner(inp)
+	for s.Scan() {
+		parts := strings.Split(s.Text(), " ")
+		var f func(chan int)
 		switch parts[0] {
 		case "inp":
-			alu.step++
-			*valp(parts[1]) = inputs[inpcount]
-			inpcount++
+			f = func(c chan int) {
+				alu.Input(alu.ValPtr(parts[1]), <-c)
+			}
 		case "add":
-			*valp(parts[1]) += val(parts[2])
+			f = func(chan int) {
+				alu.Add(alu.ValPtr(parts[1]), alu.Val(parts[2]))
+			}
 		case "mul":
-			*valp(parts[1]) *= val(parts[2])
+			f = func(chan int) {
+				alu.Mul(alu.ValPtr(parts[1]), alu.Val(parts[2]))
+			}
 		case "div":
-			*valp(parts[1]) /= val(parts[2])
+			f = func(chan int) {
+				alu.Div(alu.ValPtr(parts[1]), alu.Val(parts[2]))
+			}
 		case "mod":
-			*valp(parts[1]) %= val(parts[2])
+			f = func(chan int) {
+				alu.Mod(alu.ValPtr(parts[1]), alu.Val(parts[2]))
+			}
 		case "eql":
-			if val(parts[1]) == val(parts[2]) {
-				*valp(parts[1]) = 1
-			} else {
-				*valp(parts[1]) = 0
+			f = func(chan int) {
+				alu.Eql(alu.ValPtr(parts[1]), alu.Val(parts[2]))
 			}
 		default:
-			panic("unknown instruction: " + line)
+			panic("unknown instruction: " + parts[0])
 		}
-	}
+		alu.program = append(alu.program, f)
 
+	}
+	return &alu
+}
+
+func (alu *ALU) run(inputs []int) bool {
+	inp := make(chan int, len(inputs))
+	for _, i := range inputs {
+		inp <- i
+	}
+	for _, f := range alu.program {
+		f(inp)
+	}
 	return alu.z == 0
 }
 
-func intToInputs(val int) ([14]int, bool) {
-	var inputs [14]int
-	for i, r := range fmt.Sprint(val) {
-		if r == '0' {
-			return inputs, false
-		}
-		inputs[i] = int(r - '0')
-	}
-	return inputs, true
-}
-
-func incInput(input []int) []int {
-	for i, v := range input {
-		if v == 9 {
-			input[i] = 1
-			continue
-		}
-		input[i]++
-		break
-	}
-	return input
-}
-
-func day24try(program []string, inputs []int, min bool) (int, []int) {
-	if len(inputs) == 14 {
-		alu := ALU{program: program}
-		if v := alu.run(inputs); v {
-			return 0, inputs
-		} else {
-			return alu.step, nil
-		}
-	}
+func day24minmax(step int, inputs []int) (int, int) {
 	var mini, maxi int
 	switch len(inputs) + 1 {
 	case 1:
@@ -160,34 +163,51 @@ func day24try(program []string, inputs []int, min bool) (int, []int) {
 	if maxi == 0 {
 		maxi = mini
 	}
-	var ints []int
-	if min {
-		for i := mini; i <= maxi; i++ {
-			ints = append(ints, i)
-		}
-	} else {
-		for i := maxi; i >= mini; i-- {
-			ints = append(ints, i)
-		}
-	}
-	for _, i := range ints {
-		inputs := append(inputs, i)
-		failstep, result := day24try(program, inputs, min)
-		if result != nil {
-			return failstep, result
-		}
-		if failstep < len(inputs) {
-			return failstep, nil
-		}
-	}
-	return len(inputs), nil
+	return mini, maxi
 }
 
-func day24a(program []string, min bool) int {
-	_, result := day24try(day24file(), nil, min)
+func day24try(alu *ALU, inputs []int, out chan int) {
+	if len(inputs) == 14 {
+		if v := alu.run(inputs); v {
+			out <- intsToInt(inputs)
+			return
+		}
+		panic("noo!")
+	}
+	mini, maxi := day24minmax(len(inputs)+1, inputs)
+	for i := mini; i <= maxi; i++ {
+		inputs := append(inputs, i)
+		day24try(alu, inputs, out)
+	}
+}
+
+func intsToInt(result []int) int {
 	var val int
-	for i, num := range result {
-		val += num * pow(10, len(result)-i-1)
+	for i := range result {
+		val = val * 10 + result[i]
 	}
 	return val
+}
+
+func day24alu() *ALU {
+	f := must(os.Open("input/day24.txt"))
+	defer f.Close()
+	return NewALU(f)
+}
+
+func day24a(alu *ALU, min bool) int {
+	out := make(chan int)
+	go func() {
+		defer close(out)
+		day24try(alu, nil, out)
+	}()
+	var results []int
+	for result := range out {
+		results = append(results, result)
+	}
+	minv, maxv := minmax(results)
+	if min {
+		return minv
+	}
+	return maxv
 }
