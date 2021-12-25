@@ -11,7 +11,8 @@ import (
 
 type ALU struct {
 	w, x, y, z int
-	program    []func(chan int)
+	inputs     []int
+	program    []func()
 }
 
 func (alu *ALU) String() string {
@@ -40,7 +41,9 @@ func (alu *ALU) Val(name string) int {
 	return n
 }
 
-func (alu *ALU) Input(into *int, inp int) {
+func (alu *ALU) Input(into *int) {
+	inp := alu.inputs[0]
+	alu.inputs = alu.inputs[1:]
 	*into = inp
 }
 
@@ -73,31 +76,42 @@ func NewALU(inp io.Reader) *ALU {
 	s := bufio.NewScanner(inp)
 	for s.Scan() {
 		parts := strings.Split(s.Text(), " ")
-		var f func(chan int)
+		var f func()
+		// Pre-prepare pointers
+		// because much faster
+		valp := alu.ValPtr(parts[1])
+		var valp2 *int
+		if len(parts) >= 3 {
+			valp2 = alu.ValPtr(parts[2])
+			if valp2 == nil {
+				n, _ := strconv.Atoi(parts[2])
+				valp2 = &n
+			}
+		}
 		switch parts[0] {
 		case "inp":
-			f = func(c chan int) {
-				alu.Input(alu.ValPtr(parts[1]), <-c)
+			f = func() {
+				alu.Input(valp)
 			}
 		case "add":
-			f = func(chan int) {
-				alu.Add(alu.ValPtr(parts[1]), alu.Val(parts[2]))
+			f = func() {
+				alu.Add(valp, *valp2)
 			}
 		case "mul":
-			f = func(chan int) {
-				alu.Mul(alu.ValPtr(parts[1]), alu.Val(parts[2]))
+			f = func() {
+				alu.Mul(valp, *valp2)
 			}
 		case "div":
-			f = func(chan int) {
-				alu.Div(alu.ValPtr(parts[1]), alu.Val(parts[2]))
+			f = func() {
+				alu.Div(valp, *valp2)
 			}
 		case "mod":
-			f = func(chan int) {
-				alu.Mod(alu.ValPtr(parts[1]), alu.Val(parts[2]))
+			f = func() {
+				alu.Mod(valp, *valp2)
 			}
 		case "eql":
-			f = func(chan int) {
-				alu.Eql(alu.ValPtr(parts[1]), alu.Val(parts[2]))
+			f = func() {
+				alu.Eql(valp, *valp2)
 			}
 		default:
 			panic("unknown instruction: " + parts[0])
@@ -109,12 +123,9 @@ func NewALU(inp io.Reader) *ALU {
 }
 
 func (alu *ALU) run(inputs []int) bool {
-	inp := make(chan int, len(inputs))
-	for _, i := range inputs {
-		inp <- i
-	}
+	alu.inputs = inputs
 	for _, f := range alu.program {
-		f(inp)
+		f()
 	}
 	return alu.z == 0
 }
@@ -191,7 +202,7 @@ func intsToInt(result []int) int {
 }
 
 func day24alu() *ALU {
-	f, err  :=os.Open("input/day24.txt")
+	f, err := os.Open("input/day24.txt")
 	if err != nil {
 		panic(err)
 	}
